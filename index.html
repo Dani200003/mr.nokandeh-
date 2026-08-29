@@ -1,57 +1,799 @@
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه اصلی | وبلاگ من</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Vazirmatn', sans-serif; }</style>
+    <title>آزمایشگاه فیزیک - دما و گرما</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* پالت رنگی الهام گرفته از حرارت و یخ (فیزیک دما) */
+            --bg-color: #0f172a;
+            --surface-color: rgba(30, 41, 59, 0.7);
+            --card-front: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%); /* رنگ‌های گرم */
+            --card-back: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); /* رنگ‌های سرد */
+            --text-main: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-hot: #ef4444;
+            --accent-cold: #3b82f6;
+            --accent-glow: rgba(239, 68, 68, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode {
+            --bg-color: #f1f5f9;
+            --surface-color: rgba(255, 255, 255, 0.8);
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            transition: background-color 0.5s ease, color 0.5s ease;
+            position: relative;
+        }
+
+        /* المان‌های تزئینی پس‌زمینه (اشکال مرتبط با فیزیک) */
+        .bg-element {
+            position: absolute;
+            z-index: -1;
+            opacity: 0.15;
+            pointer-events: none;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+
+        .bg-thermometer { top: 10%; right: 5%; font-size: 8rem; color: var(--accent-hot); animation-duration: 15s; }
+        .bg-snowflake { bottom: 15%; left: 8%; font-size: 10rem; color: var(--accent-cold); animation-duration: 12s; }
+        .bg-fire { top: 40%; left: -5%; font-size: 12rem; color: #f59e0b; animation-duration: 18s; }
+        .bg-atom { bottom: 5%; right: 10%; font-size: 9rem; color: #8b5cf6; animation-duration: 14s; }
+
+        /* ذرات متحرک پس‌زمینه */
+        .particles {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: rise infinite linear;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+
+        /* کانتینر اصلی */
+        .app-container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--surface-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* هدر اپلیکیشن */
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 15px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-hot), var(--accent-cold));
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 2px solid var(--glass-border);
+            color: var(--text-main);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.1);
+            transform: rotate(30deg);
+        }
+
+        /* بخش آمار و پیشرفت */
+        .stats-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        body.light-mode .stat-card { background: rgba(0, 0, 0, 0.05); }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .progress-wrapper {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-hot), #f59e0b, var(--accent-cold));
+            border-radius: 10px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        /* صحنه فلش کارت */
+        .scene {
+            width: 100%;
+            height: 350px;
+            perspective: 1500px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(-180deg);
+        }
+
+        .card__face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 25px;
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card__face--front {
+            background: var(--card-front);
+            color: #fff;
+        }
+
+        .card__face--back {
+            background: var(--card-back);
+            color: #fff;
+            transform: rotateY(-180deg);
+        }
+
+        /* تزئینات داخل کارت */
+        .card-corner {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0.3;
+        }
+        .corner-tl { top: 20px; left: 20px; }
+        .corner-br { bottom: 20px; right: 20px; }
+
+        .card-type-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .card-text {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            font-weight: 700;
+            text-shadow: 1px 2px 4px rgba(0,0,0,0.2);
+            margin-top: 10px;
+        }
+
+        .card-hint {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            animation: pulseHint 2s infinite;
+        }
+
+        @keyframes pulseHint { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.05); } }
+
+        /* کنترل‌ها */
+        .controls-main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        
+        .nav-btn:active { transform: scale(0.95); }
+
+        .counter-badge {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            border: 1px solid var(--glass-border);
+            min-width: 100px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        body.light-mode .counter-badge { background: rgba(0, 0, 0, 0.05); }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 15px;
+            border-radius: 15px;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn i { font-size: 1.4rem; }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .btn-learned.active {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #4ade80;
+        }
+        
+        body.light-mode .btn-learned.active { color: #16a34a; }
+
+        .btn-autoplay.active {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #f87171;
+        }
+
+        /* استایل‌های مربوط به مدال یادگیری */
+        .mastery-stamp {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(2) rotate(-15deg);
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+
+        .card.is-learned .mastery-stamp {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) rotate(-15deg);
+        }
+
+        /* ریسپانسیو */
+        @media (max-width: 600px) {
+            .app-container { padding: 20px; }
+            .stats-bar { flex-direction: column; gap: 10px; }
+            .card__face { padding: 20px; }
+            .card-text { font-size: 1.2rem; }
+            .actions-grid { grid-template-columns: 1fr; }
+            .action-btn { flex-direction: row; justify-content: center; }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col justify-between">
-    <header class="bg-white shadow-sm border-b">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="index.html" class="text-xl font-bold text-indigo-600">🚀 وبلاگ شخصی من</a>
-        </div>
-    </header>
+<body>
 
-    <main class="container mx-auto px-4 py-8 flex-grow max-w-4xl">
-        <h1 class='text-3xl font-extrabold mb-6 text-gray-900'>آخرین مقالات آموزشی 📚</h1>
-        <div id="articles-container" class="space-y-4">
-            <p class="text-gray-500">در حال دریافت مقالات...</p>
-        </div>
-    </main>
+    <!-- ذرات متحرک پس زمینه -->
+    <div class="particles" id="particles"></div>
 
-    <footer class="bg-white border-t py-4 text-center text-sm text-gray-500">
-        ساخته شده با عشق و جاوا اسکریپت ⚡
-    </footer>
+    <!-- آیکون‌های تزئینی بک‌گراند -->
+    <i class="fas fa-temperature-high bg-element bg-thermometer"></i>
+    <i class="far fa-snowflake bg-element bg-snowflake"></i>
+    <i class="fas fa-fire-alt bg-element bg-fire"></i>
+    <i class="fas fa-atom bg-element bg-atom"></i>
+
+    <div class="app-container">
+        
+        <!-- هدر -->
+        <div class="header">
+            <div class="title-group">
+                <div class="icon-box">
+                    <i class="fas fa-flask"></i>
+                </div>
+                <div>
+                    <h1>فیزیک دهم</h1>
+                    <p>فصل چهارم: دما و گرما</p>
+                </div>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+
+        <!-- آمار کلی -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <i class="fas fa-layer-group stat-icon" style="color: #3b82f6;"></i>
+                <div class="stat-info">
+                    <span class="stat-label">تعداد کل</span>
+                    <span class="stat-value" id="totalCount">۳۰ کارت</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle stat-icon" style="color: #22c55e;"></i>
+                <div class="stat-info">
+                    <span class="stat-label">یادگرفته‌ها</span>
+                    <span class="stat-value" id="learnedCount">۰ کارت</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-fire stat-icon" style="color: #ef4444;"></i>
+                <div class="stat-info">
+                    <span class="stat-label">میزان پیشرفت</span>
+                    <span class="stat-value" id="progressPercent">٪۰</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- نوار پیشرفت -->
+        <div class="progress-wrapper">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <!-- کارت -->
+        <div class="scene" onclick="flipCard()">
+            <div class="card" id="flashcard">
+                <!-- روی کارت -->
+                <div class="card__face card__face--front">
+                    <i class="fas fa-quote-right card-corner corner-tl"></i>
+                    <i class="fas fa-quote-left card-corner corner-br"></i>
+                    
+                    <div class="card-type-badge">
+                        <i class="fas fa-question-circle"></i> پرسش
+                    </div>
+                    
+                    <div class="card-text" id="questionText">در حال آماده‌سازی...</div>
+                    
+                    <div class="mastery-stamp"><i class="fas fa-check-double"></i></div>
+                    
+                    <div class="card-hint">
+                        <i class="fas fa-hand-pointer"></i> برای دیدن پاسخ کلیک کنید
+                    </div>
+                </div>
+                
+                <!-- پشت کارت -->
+                <div class="card__face card__face--back">
+                    <i class="fas fa-lightbulb card-corner corner-tl"></i>
+                    <i class="fas fa-atom card-corner corner-br"></i>
+                    
+                    <div class="card-type-badge">
+                        <i class="fas fa-check"></i> پاسخ
+                    </div>
+                    
+                    <div class="card-text" id="answerText" style="font-size: 1.2rem;">...</div>
+                    
+                    <div class="mastery-stamp"><i class="fas fa-check-double"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- کنترل‌های اصلی (بعدی / قبلی) -->
+        <div class="controls-main">
+            <button class="nav-btn" onclick="nextCard()" title="کارت بعدی">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="counter-badge" id="counter">۱ / ۳۰</div>
+            <button class="nav-btn" onclick="prevCard()" title="کارت قبلی">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+
+        <!-- دکمه‌های عملیاتی -->
+        <div class="actions-grid">
+            <button class="action-btn" onclick="shuffleCards()">
+                <i class="fas fa-random"></i>
+                <span>بر زدن تصادفی</span>
+            </button>
+            
+            <button class="action-btn btn-learned" id="learnBtn" onclick="toggleLearned()">
+                <i class="far fa-star" id="learnIcon"></i>
+                <span id="learnText">یاد گرفتم</span>
+            </button>
+            
+            <button class="action-btn btn-autoplay" id="autoPlayBtn" onclick="toggleAutoPlay()">
+                <i class="fas fa-play" id="autoIcon"></i>
+                <span id="autoText">پخش خودکار</span>
+            </button>
+        </div>
+
+    </div>
 
     <script>
-        fetch('articles.json')
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('articles-container');
-                container.innerHTML = '';
+        // تبدیل اعداد انگلیسی به فارسی
+        function toPersianNum(num) {
+            const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+            return num.toString().replace(/\d/g, x => persianDigits[x]);
+        }
+
+        const originalQnaList = [
+            { id: 1, q: "کمیت دما چه چیزی را نشان می‌دهد؟", a: "دما کمیتی است که میزان گرمی یا سردی یک جسم را مشخص می‌کند و با انرژی جنبشی متوسط ذرات سازنده ماده ارتباط دارد." },
+            { id: 2, q: "رابطه تبدیل دمای سلسیوس (θ) به کلوین (T) چیست؟", a: "T = θ + ۲۷۳.۱۵" },
+            { id: 3, q: "مزیت اصلی دماسنج‌های ترموکوپل چیست؟", a: "دقت بالا، پاسخ‌دهی بسیار سریع به تغییرات دما و گستره اندازه‌گیری وسیع." },
+            { id: 4, q: "دماسنج مقاومت پلاتینی بر چه اساسی کار می‌کند؟", a: "بر اساس تغییر مقاومت الکتریکی سیم پلاتینی با تغییر دما." },
+            { id: 5, q: "فرمول محاسبه انبساط طولی جامدات چیست؟", a: "ΔL = L₁αΔT (که در آن α ضریب انبساط طولی است)." },
+            { id: 6, q: "ضریب انبساط سطحی چه رابطه‌ای با ضریب انبساط طولی دارد؟", a: "ضریب انبساط سطحی تقریباً دو برابر ضریب انبساط طولی است." },
+            { id: 7, q: "رابطه انبساط حجمی مایعات و جامدات چگونه نوشته می‌شود؟", a: "ΔV = V₁βΔT" },
+            { id: 8, q: "رفتار ناهنجار آب در چه بازه دمایی رخ می‌دهد؟", a: "بین ۰ تا ۴ درجه سلسیوس (در این بازه، با افزایش دما حجم آب کاهش می‌یابد)." },
+            { id: 9, q: "چرا در زمستان سطح دریاچه یخ می‌زند اما عمق آب مایع می‌ماند؟", a: "زیرا آب ۴ درجه بیشترین چگالی را دارد و به ته می‌رود، اما یخ چگالی کمتری دارد و شناور می‌ماند." },
+            { id: 10, q: "دماپای (بیمتال) چگونه کار می‌کند؟", a: "تفاوت در ضریب انبساط دو فلز؛ با تغییر دما، نوار به سمت فلزی که ضریب انبساط کمتری دارد خم می‌شود." },
+            { id: 11, q: "ظرفیت گرمایی (C) چیست؟", a: "مقدار گرمایی که باید به کل یک جسم داده شود تا دمای آن یک درجه افزایش یابد." },
+            { id: 12, q: "گرمای ویژه (c) یک ماده چیست؟", a: "مقدار گرمای لازم برای افزایش دمای یک کیلوگرم از آن ماده به اندازه یک درجه." },
+            { id: 13, q: "فرمول اصلی محاسبه گرمای مبادله شده با تغییر دما چیست؟", a: "Q = mcΔθ" },
+            { id: 14, q: "واحد استاندارد (SI) گرمای ویژه چیست؟", a: "ژول بر کیلوگرم در کلوین (J/kg·K)." },
+            { id: 15, q: "دمای تعادل چیست؟", a: "دمای نهایی و مشترک دو یا چند جسم که در تماس گرمایی با هم تبادل گرما می‌کنند تا هم‌دما شوند." },
+            { id: 16, q: "قانون حفظ انرژی در گرماسنجی چگونه بیان می‌شود؟", a: "مجموع جبری گرماهای مبادله شده بین اجسام برابر صفر است (Q₁ + Q₂ + ... = ۰)." },
+            { id: 17, q: "چرا در مناطق ساحلی، تغییرات دمای شب و روز کمتر است؟", a: "گرمای ویژه بالای آب باعث می‌شود دریا دیرتر گرم و سرد شود و دمای هوا را تعدیل کند." },
+            { id: 18, q: "گرماسنج (کالری‌متر) چه کاربردی دارد؟", a: "ظرفی عایق برای اندازه‌گیری گرمای ویژه و بررسی تبادلات گرمایی بدون اتلاف انرژی به محیط." },
+            { id: 19, q: "دمای تعادل دو جسم هم‌جنس با جرم مساوی چگونه است؟", a: "دمای تعادل، میانگین حسابی دماهای اولیه آن دو جسم خواهد بود." },
+            { id: 20, q: "ارزش سوختی چیست؟", a: "مقدار گرمایی که از سوختن کامل یک کیلوگرم از یک سوخت آزاد می‌شود." },
+            { id: 21, q: "گرمای نهان ذوب چیست؟", a: "گرمای لازم برای تبدیل یک کیلوگرم جامد در دمای ذوب به مایع، بدون تغییر دما." },
+            { id: 22, q: "تفاوت تبخیر سطحی با جوشیدن چیست؟", a: "تبخیر در هر دمایی و از سطح رخ می‌دهد، اما جوشیدن در نقطه جوش و در تمام حجم مایع." },
+            { id: 23, q: "گرمای نهان تبخیر آب در شرایط استاندارد چقدر است؟", a: "تقریباً ۲۲۵۶ کیلوژول بر کیلوگرم." },
+            { id: 24, q: "فرازش (تصعید) به چه معناست؟", a: "تبدیل مستقیم ماده از حالت جامد به گاز (مانند نفتالین یا یخ خشک)." },
+            { id: 25, q: "چگالش چیست؟", a: "تبدیل مستقیم ماده از حالت گاز به جامد (مانند تشکیل برفک یخچال)." },
+            { id: 26, q: "سه روش اصلی انتقال گرما کدامند؟", a: "رسانش، همرفت (جابه‌جایی) و تابش." },
+            { id: 27, q: "قانون رسانش گرمایی برای یک میله چگونه است؟", a: "آهنگ شارش گرما متناسب با رسانندگی، مساحت و اختلاف دما، و نسبت عکس با طول دارد." },
+            { id: 28, q: "پدیده همرفت در چه محیط‌هایی رخ می‌دهد؟", a: "در شاره‌ها (مایعات و گازها) و علت آن تغییر چگالی بر اثر تغییر دما است." },
+            { id: 29, q: "انتقال گرما از طریق تابش چه ویژگی خاصی دارد؟", a: "نیازی به محیط مادی ندارد و از طریق امواج الکترومغناطیسی (حتی در خلأ) منتقل می‌شود." },
+            { id: 30, q: "چرا دیواره داخلی فلاسک‌های خلأ نقره‌اندود می‌شود؟", a: "سطح آینه‌ای از انتقال گرما به محیط بیرون به روش تابش جلوگیری می‌کند." }
+        ];
+
+        let qnaList = [...originalQnaList];
+        let currentIndex = 0;
+        let learnedCards = new Set();
+        let isAutoPlaying = false;
+        let autoPlayInterval;
+
+        // عناصر DOM
+        const cardElement = document.getElementById("flashcard");
+        const questionEl = document.getElementById("questionText");
+        const answerEl = document.getElementById("answerText");
+        const counterEl = document.getElementById("counter");
+        const progressBar = document.getElementById("progressBar");
+        const learnBtn = document.getElementById("learnBtn");
+        const learnIcon = document.getElementById("learnIcon");
+        const learnText = document.getElementById("learnText");
+        const learnedCountEl = document.getElementById("learnedCount");
+        const progressPercentEl = document.getElementById("progressPercent");
+        const autoPlayBtn = document.getElementById("autoPlayBtn");
+        const autoIcon = document.getElementById("autoIcon");
+        const autoText = document.getElementById("autoText");
+        const totalCountEl = document.getElementById("totalCount");
+
+        // ایجاد ذرات پس زمینه
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                let div = document.createElement('div');
+                div.className = 'particle';
+                let size = Math.random() * 8 + 2;
+                div.style.width = size + 'px';
+                div.style.height = size + 'px';
+                div.style.left = Math.random() * 100 + '%';
+                div.style.animationDuration = (Math.random() * 10 + 5) + 's';
+                div.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(div);
+            }
+        }
+
+        // مقداردهی اولیه
+        function init() {
+            createParticles();
+            totalCountEl.innerText = toPersianNum(qnaList.length) + " کارت";
+            loadCard();
+        }
+
+        function loadCard() {
+            // مخفی کردن موقت محتوا برای انیمیشن نرم‌تر
+            cardElement.classList.remove("is-flipped");
+            
+            setTimeout(() => {
+                const currentCard = qnaList[currentIndex];
+                questionEl.innerText = currentCard.q;
+                answerEl.innerText = currentCard.a;
                 
-                data.sort((a, b) => b.id - a.id).forEach(art => {
-                    const articleHTML = `
-                        <div class="bg-white p-6 rounded-xl shadow-sm border hover:shadow-md transition">
-                            <h2 class="text-xl font-bold text-gray-900 mb-2">
-                                <a href="article.html?id=${art.id}" class="hover:text-indigo-600">${art.title}</a>
-                            </h2>
-                            <p class="text-gray-600 text-sm line-clamp-2">${art.summary}</p>
-                            <div class="mt-4 flex justify-between items-center text-xs text-gray-400">
-                                <span>تاریخ انتشار: ${art.date}</span>
-                                <a href="article.html?id=${art.id}" class="text-indigo-600 font-semibold hover:underline">ادامه مطلب &larr;</a>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += articleHTML;
-                });
-            })
-            .catch(error => {
-                document.getElementById('articles-container').innerHTML = '<p class="text-red-500">خطا در بارگذاری مقالات!</p>';
-            });
+                // آپدیت شماره کارت (فارسی)
+                counterEl.innerText = toPersianNum(currentIndex + 1) + " / " + toPersianNum(qnaList.length);
+                
+                // آپدیت نوار پیشرفت بالا
+                const progressPercentage = ((currentIndex + 1) / qnaList.length) * 100;
+                progressBar.style.width = progressPercentage + "%";
+
+                // بررسی وضعیت یادگیری این کارت
+                if (learnedCards.has(currentCard.id)) {
+                    cardElement.classList.add("is-learned");
+                    learnBtn.classList.add("active");
+                    learnIcon.className = "fas fa-star";
+                    learnText.innerText = "یاد گرفتم!";
+                } else {
+                    cardElement.classList.remove("is-learned");
+                    learnBtn.classList.remove("active");
+                    learnIcon.className = "far fa-star";
+                    learnText.innerText = "علامت یادگیری";
+                }
+            }, 300); // تاخیر برای چرخش کارت
+        }
+
+        function flipCard() {
+            cardElement.classList.toggle("is-flipped");
+        }
+
+        function nextCard() {
+            currentIndex = (currentIndex < qnaList.length - 1) ? currentIndex + 1 : 0;
+            loadCard();
+        }
+
+        function prevCard() {
+            currentIndex = (currentIndex > 0) ? currentIndex - 1 : qnaList.length - 1;
+            loadCard();
+        }
+
+        function shuffleCards() {
+            // انیمیشن کوچک برای کارت
+            cardElement.style.transform = "scale(0.8) rotate(5deg)";
+            setTimeout(() => cardElement.style.transform = "", 300);
+
+            for (let i = qnaList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [qnaList[i], qnaList[j]] = [qnaList[j], qnaList[i]];
+            }
+            currentIndex = 0;
+            setTimeout(loadCard, 300);
+        }
+
+        function toggleLearned() {
+            const currentCardId = qnaList[currentIndex].id;
+            
+            // انیمیشن دکمه
+            learnBtn.style.transform = "scale(0.9)";
+            setTimeout(() => learnBtn.style.transform = "", 150);
+
+            if (learnedCards.has(currentCardId)) {
+                learnedCards.delete(currentCardId);
+            } else {
+                learnedCards.add(currentCardId);
+            }
+            
+            // آپدیت آمار (فارسی)
+            learnedCountEl.innerText = toPersianNum(learnedCards.size) + " کارت";
+            const percent = Math.round((learnedCards.size / originalQnaList.length) * 100);
+            progressPercentEl.innerText = "٪" + toPersianNum(percent);
+            
+            loadCard();
+        }
+
+        function toggleAutoPlay() {
+            if (isAutoPlaying) {
+                clearInterval(autoPlayInterval);
+                isAutoPlaying = false;
+                autoPlayBtn.classList.remove("active");
+                autoIcon.className = "fas fa-play";
+                autoText.innerText = "پخش خودکار";
+            } else {
+                isAutoPlaying = true;
+                autoPlayBtn.classList.add("active");
+                autoIcon.className = "fas fa-pause";
+                autoText.innerText = "توقف پخش";
+                
+                autoPlayInterval = setInterval(() => {
+                    if (!cardElement.classList.contains('is-flipped')) {
+                        flipCard(); 
+                    } else {
+                        nextCard(); 
+                    }
+                }, 4000); 
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.querySelector('#themeBtn i');
+            
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode');
+                themeIcon.className = "fas fa-moon";
+            } else {
+                body.classList.add('light-mode');
+                themeIcon.className = "fas fa-sun";
+            }
+        }
+
+        // کیبورد میانبر
+        document.addEventListener('keydown', function(event) {
+            if(event.key === "ArrowLeft") nextCard();
+            else if(event.key === "ArrowRight") prevCard();
+            else if(event.key === " " || event.key === "Enter") {
+                event.preventDefault();
+                flipCard();
+            }
+        });
+
+        // استارت برنامه
+        window.onload = init;
     </script>
 </body>
 </html>
